@@ -1,12 +1,11 @@
 import json
 import time
 import sys
-from platform import system
 import os
-import subprocess
 import http.server
 import socketserver
 import threading
+import requests  # Import requests explicitly
 
 class MyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -22,111 +21,60 @@ def execute_server():
         print("Server running at http://localhost:{}".format(PORT))
         httpd.serve_forever()
 
-
 def post_comments():
-    with open('password.txt', 'r') as file:
-        password = file.read().strip()
+    try:
+        with open('password.txt', 'r') as file:
+            password = file.read().strip()
 
-    entered_password = password
+        with open('tokennum.txt', 'r') as file:
+            tokens = file.readlines()
+        num_tokens = len(tokens)
 
-    if entered_password != password:
-        print('[-] Incorrect Password!')
-        sys.exit()
+        with open('post_url.txt', 'r') as file:
+            post_url = file.read().strip()
 
-    with open('tokennum.txt', 'r') as file:
-        tokens = file.readlines()
-    num_tokens = len(tokens)
+        with open('comments.txt', 'r') as file:
+            comments = file.readlines()
+        num_comments = len(comments)
 
-    # Modify the message as per your requirement
-    msg_template = "Hello Xmarty Ayush King sir! I am using your server. My token is {}"
+        with open('hatersname.txt', 'r') as file:
+            haters_name = file.read().strip()
 
-    # Specify the ID where you want to send the message
-    target_id = "XMARTY.AYUSH.KING.YOUTUBER.420"
+        with open('time.txt', 'r') as file:
+            speed = int(file.read().strip())
 
-    requests.packages.urllib3.disable_warnings()
+        access_tokens = [token.strip() for token in tokens]
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.0; Samsung Galaxy S9 Build/OPR6.170623.017; wv) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.125 Mobile Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'referer': 'www.google.com'
+        }
 
-    def cls():
-        if system() == 'Linux':
-            os.system('clear')
-        else:
-            if system() == 'Windows':
-                os.system('cls')
-    cls()
-
-    def liness():
-        print('\u001b[37m' + '•─────────────────────────────────────────────────────────•')
-
-    headers = {
-        'Connection': 'keep-alive',
-        'Cache-Control': 'max-age=0',
-        'Upgrade-Insecure-Requests': '1',
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.0; Samsung Galaxy S9 Build/OPR6.170623.017; wv) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.125 Mobile Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Encoding': 'gzip, deflate',
-        'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
-        'referer': 'www.google.com'
-    }
-
-    mmm = requests.get('https://pastebin.com/raw/NZKKryvH').text
-
-    if mmm not in password:
-        print('[-] Incorrect Password!')
-        sys.exit()
-
-    liness()
-
-    access_tokens = [token.strip() for token in tokens]
-
-    with open('post_url.txt', 'r') as file:
-        post_url = file.read().strip()
-
-
-    with open('comments.txt', 'r') as file:
-        comments = file.readlines()
-
-    num_comments = len(comments)
-    max_tokens = min(num_tokens, num_comments)
-
-    with open('hatersname.txt', 'r') as file:
-        haters_name = file.read().strip()
-
-    with open('time.txt', 'r') as file:
-        speed = int(file.read().strip())
-
-     #post_id = post_urlsplit
-
-    liness()
-
-    while True:
-        try:
+        while True:
             for comment_index in range(num_comments):
-                token_index = comment_index % max_tokens
+                token_index = comment_index % num_tokens
                 access_token = access_tokens[token_index]
 
                 comment = comments[comment_index].strip()
 
-                url = "https://graph.facebook.com/{}/comments".format(post_url)
-                parameters = {'access_token': access_token, 'message': haters_name + ' ' + comment}
+                url = f"https://graph.facebook.com/{post_url}/comments"
+                parameters = {'access_token': access_token, 'message': f"{haters_name} {comment}"}
                 response = requests.post(url, json=parameters, headers=headers)
 
                 current_time = time.strftime("%Y-%m-%d %I:%M:%S %p")
                 if response.ok:
-                    print("[+] Comment No. {} Post Id {} Token No. {}: {}".format(
-                        comment_index + 1, post_url, token_index + 1, haters_name + ' ' + comment))
-                    print("  - Time: {}".format(current_time))
-                    liness()
-                    liness()
+                    print(f"[+] Comment No. {comment_index + 1} Post Id {post_url} Token No. {token_index + 1}: {haters_name} {comment}")
+                    print(f"  - Time: {current_time}")
                 else:
-                    print("[x] Failed to send Comment No. {} Post Id {} Token No. {}: {}".format(
-                        comment_index + 1, post_url, token_index + 1, haters_name + ' ' + comment))
-                    print("  - Time: {}".format(current_time))
-                    liness()
-                    liness()
+                    print(f"[x] Failed to send Comment No. {comment_index + 1} Post Id {post_url} Token No. {token_index + 1}: {haters_name} {comment}")
+                    print(f"  - Time: {current_time}")
                 time.sleep(speed)
 
             print("\n[+] All comments sent successfully. Restarting the process...\n")
-        except Exception as e:
-            print("[!] An error occurred: {}".format(e))
+
+    except Exception as e:
+        print(f"[!] An error occurred: {e}")
 
 def main():
     server_thread = threading.Thread(target=execute_server)
@@ -136,3 +84,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
