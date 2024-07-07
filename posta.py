@@ -1,4 +1,3 @@
-Ў@as�E6�aD+SFБ`8!1m+a(dx8Oﾊjhڱ{mלכimport requests
 import json
 import time
 import sys
